@@ -3,140 +3,141 @@ package com.maze.generator;
 import com.maze.core.IMazeGenerator;
 import com.maze.model.*;
 import com.maze.util.UnionFind;
+
 import java.util.*;
 
 /**
- * Kruskal's Minimum Spanning Tree algoritması ile labirent üretir.
+ * Maze generator using Kruskal's Minimum Spanning Tree algorithm.
  *
- * Algoritma:
- * 1. Tüm hücreler ayrı set'lerde başlar
- * 2. Tüm olası duvarları (edge) listeye ekle
- * 3. Duvarları rastgele karıştır
- * 4. Her duvar için: eğer iki farklı set'i birleştiriyorsa, duvarı kaldır
- * 5. Tüm hücreler tek bir set'te olana kadar devam et
+ * Algorithm:
+ * 1. Each cell starts in its own disjoint set
+ * 2. All possible walls (edges) are collected
+ * 3. Edges are shuffled randomly
+ * 4. For each edge:
+ *    - If the two cells are in different sets, remove the wall and union them
+ * 5. Continue until all cells are connected
  *
- * Time Complexity: O(E log E) - E = edge sayısı
- * Space Complexity: O(V + E) - V = vertex sayısı
+ * Properties:
+ * - Grid-based
+ * - Cells are located at odd indices
+ * - Walls are located at even indices
+ *
+ * Time Complexity: O(E α(V))
+ * Space Complexity: O(V + E)
  */
 public class KruskalMazeGenerator implements IMazeGenerator {
 
+    /* ===================== EDGE ===================== */
+    private static class Edge {
+        Position cellA;
+        Position cellB;
+        Position wallBetween;
+
+        Edge(Position a, Position b, Position wall) {
+            this.cellA = a;
+            this.cellB = b;
+            this.wallBetween = wall;
+        }
+    }
+
+    /* ===================== GENERATE ===================== */
     @Override
     public Maze generate(int rows, int cols) {
 
-        int mazeRows = rows * 2 + 1;
-        int mazeCols = cols * 2 + 1;
+        // Ensure odd dimensions
+        if (rows % 2 == 0) rows++;
+        if (cols % 2 == 0) cols++;
 
-        Maze maze = new Maze(mazeRows, mazeCols);
+        Maze maze = new Maze(rows, cols);
+        initializeWalls(maze);
 
-        // 1. Fill everything with WALL
-        for (int r = 0; r < mazeRows; r++) {
-            for (int c = 0; c < mazeCols; c++) {
-                maze.setCell(r, c, Cell.Type.WALL);
-            }
-        }
-
-        // 2. Open all room cells (odd, odd)
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                maze.setCell(2 * r + 1, 2 * c + 1, Cell.Type.PATH);
-            }
-        }
-
-        // 3. Union-Find for logical cells
+        // Union-Find over entire grid (only odd cells are used)
         UnionFind uf = new UnionFind(rows * cols);
 
-        // 4. Generate walls between logical cells
-        List<Edge> edges = new ArrayList<>();
-
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-
-                int index = r * cols + c;
-
-                // Right neighbor
-                if (c < cols - 1) {
-                    edges.add(new Edge(
-                            new Position(r, c),
-                            new Position(r, c + 1),
-                            Math.random()
-                    ));
-                }
-
-                // Bottom neighbor
-                if (r < rows - 1) {
-                    edges.add(new Edge(
-                            new Position(r, c),
-                            new Position(r + 1, c),
-                            Math.random()
-                    ));
-                }
+        // Initialize cells
+        for (int r = 1; r < rows; r += 2) {
+            for (int c = 1; c < cols; c += 2) {
+                maze.setCell(r, c, Cell.Type.PATH);
             }
         }
 
-        Collections.shuffle(edges);
+        // Build and shuffle edges
+        List<Edge> edges = buildEdges(rows, cols);
+        Collections.shuffle(edges, new Random());
 
-        // 5. Kruskal: remove walls
+        // Kruskal MST
         for (Edge edge : edges) {
-            Position a = edge.getFrom();
-            Position b = edge.getTo();
+            int idA = cellIndex(edge.cellA.getRow(), edge.cellA.getCol(), cols);
+            int idB = cellIndex(edge.cellB.getRow(), edge.cellB.getCol(), cols);
 
-            int cellA = a.getRow() * cols + a.getCol();
-            int cellB = b.getRow() * cols + b.getCol();
-
-            if (uf.union(cellA, cellB)) {
-
-                int wallRow = a.getRow() + b.getRow() + 1;
-                int wallCol = a.getCol() + b.getCol() + 1;
-
-                maze.setCell(wallRow, wallCol, Cell.Type.PATH);
+            if (uf.union(idA, idB)) {
+                maze.setCell(
+                        edge.wallBetween.getRow(),
+                        edge.wallBetween.getCol(),
+                        Cell.Type.PATH
+                );
             }
         }
 
-        // 6. Start & End
-        maze.setStartPosition(new Position(1, 1));
-        maze.setEndPosition(new Position(mazeRows - 2, mazeCols - 2));
-
-        maze.setCell(1, 1, Cell.Type.START);
-        maze.setCell(mazeRows - 2, mazeCols - 2, Cell.Type.END);
+        // Start & End
+        setStartAndEnd(maze);
 
         return maze;
     }
 
-
+    /* ===================== GENERATE WITH STEPS ===================== */
     @Override
     public List<AlgorithmStep> generateWithSteps(int rows, int cols) {
-        List<AlgorithmStep> steps = new ArrayList<>();
-        Maze maze = new Maze(rows, cols);
 
+        List<AlgorithmStep> steps = new ArrayList<>();
+
+        if (rows % 2 == 0) rows++;
+        if (cols % 2 == 0) cols++;
+
+        Maze maze = new Maze(rows, cols);
         initializeWalls(maze);
+
         UnionFind uf = new UnionFind(rows * cols);
-        List<Edge> edges = generateEdges(rows, cols);
-        Collections.shuffle(edges);
+
+        // Initialize cells
+        for (int r = 1; r < rows; r += 2) {
+            for (int c = 1; c < cols; c += 2) {
+                maze.setCell(r, c, Cell.Type.PATH);
+            }
+        }
+
+        List<Edge> edges = buildEdges(rows, cols);
+        Collections.shuffle(edges, new Random());
 
         int stepCount = 0;
+
         for (Edge edge : edges) {
-            Position from = edge.getFrom();
-            Position to = edge.getTo();
+            int idA = cellIndex(edge.cellA.getRow(), edge.cellA.getCol(), cols);
+            int idB = cellIndex(edge.cellB.getRow(), edge.cellB.getCol(), cols);
 
-            int cell1 = positionToIndex(from, cols);
-            int cell2 = positionToIndex(to, cols);
-
-            if (uf.union(cell1, cell2)) {
-                maze.setCell(from.getRow(), from.getCol(), Cell.Type.PATH);
-                maze.setCell(to.getRow(), to.getCol(), Cell.Type.PATH);
+            if (uf.union(idA, idB)) {
+                maze.setCell(
+                        edge.wallBetween.getRow(),
+                        edge.wallBetween.getCol(),
+                        Cell.Type.PATH
+                );
 
                 steps.add(new AlgorithmStep(
                         AlgorithmStep.StepType.VISIT,
-                        from,
-                        Arrays.asList(from, to),
-                        "Step " + (++stepCount) + ": Connected " + from + " and " + to
+                        edge.wallBetween,
+                        Arrays.asList(edge.cellA, edge.cellB),
+                        "Step " + (++stepCount) +
+                                ": Removed wall between " +
+                                edge.cellA + " and " + edge.cellB
                 ));
             }
         }
 
+        setStartAndEnd(maze);
+
         steps.add(new AlgorithmStep(
                 AlgorithmStep.StepType.COMPLETE,
-                new Position(rows - 1, cols - 1),
+                maze.getEndPosition(),
                 new ArrayList<>(),
                 "Maze generation completed!"
         ));
@@ -144,39 +145,64 @@ public class KruskalMazeGenerator implements IMazeGenerator {
         return steps;
     }
 
-    private void initializeWalls(Maze maze) {
-        for (int r = 0; r < maze.getRows(); r++) {
-            for (int c = 0; c < maze.getCols(); c++) {
-                maze.getCell(r, c).setType(Cell.Type.WALL); // ✓ Doğru
-            }
-        }
-    }
+    /* ===================== HELPERS ===================== */
 
-    private List<Edge> generateEdges(int rows, int cols) {
+    private List<Edge> buildEdges(int rows, int cols) {
         List<Edge> edges = new ArrayList<>();
 
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                Position current = new Position(r, c);
+        for (int r = 1; r < rows; r += 2) {
+            for (int c = 1; c < cols; c += 2) {
+                Position cell = new Position(r, c);
 
-                // Sağ komşu
-                if (c < cols - 1) {
-                    edges.add(new Edge(current, new Position(r, c + 1), Math.random()));
+                // Right neighbor
+                if (c + 2 < cols) {
+                    edges.add(new Edge(
+                            cell,
+                            new Position(r, c + 2),
+                            new Position(r, c + 1)
+                    ));
                 }
 
-                // Alt komşu
-                if (r < rows - 1) {
-                    edges.add(new Edge(current, new Position(r + 1, c), Math.random()));
+                // Bottom neighbor
+                if (r + 2 < rows) {
+                    edges.add(new Edge(
+                            cell,
+                            new Position(r + 2, c),
+                            new Position(r + 1, c)
+                    ));
                 }
             }
         }
-
         return edges;
     }
 
-    private int positionToIndex(Position pos, int cols) {
-        return pos.getRow() * cols + pos.getCol();
+    private void initializeWalls(Maze maze) {
+        for (int r = 0; r < maze.getRows(); r++) {
+            for (int c = 0; c < maze.getCols(); c++) {
+                maze.setCell(r, c, Cell.Type.WALL);
+            }
+        }
     }
+
+    private int cellIndex(int row, int col, int cols) {
+        return row * cols + col;
+    }
+
+    private void setStartAndEnd(Maze maze) {
+        Position start = new Position(1, 1);
+        Position end = new Position(
+                maze.getRows() - 2,
+                maze.getCols() - 2
+        );
+
+        maze.setStartPosition(start);
+        maze.setEndPosition(end);
+
+        maze.setCell(start.getRow(), start.getCol(), Cell.Type.START);
+        maze.setCell(end.getRow(), end.getCol(), Cell.Type.END);
+    }
+
+    /* ===================== META ===================== */
 
     @Override
     public String getAlgorithmName() {
@@ -185,7 +211,7 @@ public class KruskalMazeGenerator implements IMazeGenerator {
 
     @Override
     public String getTimeComplexity() {
-        return "O(E log E)";
+        return "O(E α(V))";
     }
 
     @Override

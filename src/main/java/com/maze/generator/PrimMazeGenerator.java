@@ -2,132 +2,150 @@ package com.maze.generator;
 
 import com.maze.core.IMazeGenerator;
 import com.maze.model.*;
+
 import java.util.*;
 
 /**
  * Prim's Minimum Spanning Tree algoritması ile labirent üretir.
  *
  * Algoritma:
- * 1. Rastgele bir başlangıç hücresi seç
- * 2. Bu hücreyi PATH yap ve duvarlarını listeye ekle
- * 3. Listeden rastgele bir duvar seç
- * 4. Eğer duvar bir PATH hücresini bir WALL hücresine bağlıyorsa:
- *    - Duvarı kaldır
- *    - WALL hücresini PATH yap
- *    - Yeni hücrenin duvarlarını listeye ekle
- * 5. Liste boşalana kadar devam et
+ * 1. Rastgele bir başlangıç hücresi seç ve PATH olarak işaretle
+ * 2. Bu hücrenin etrafındaki duvarları (komşu hücrelerle bağlantı) bir listeye ekle
+ * 3. Liste boşalana kadar:
+ *    a. Listeden rastgele bir duvar seç
+ *    b. Eğer bu duvar PATH olan bir hücreyi WALL olan bir hücreye bağlıyorsa:
+ *       - Duvarı kaldır
+ *       - WALL hücresini PATH yap
+ *       - Yeni PATH hücresinin komşu duvarlarını listeye ekle
  *
- * Time Complexity: O(V^2) - basit implementasyon
- * Space Complexity: O(V)
+ * Özellikler:
+ * - Grid-based: kullanıcıdan alınan boyut final maze grid boyutu
+ * - Hücreler tek indekslerde, duvarlar çift indekslerde
+ * - Rastgele seçim ile farklı labirentler üretilebilir
+ *
+ * Time Complexity: O(V) - her hücre en fazla 4 defa işlenir
+ * Space Complexity: O(V) - duvar listesi ve maze matrisi
  */
 public class PrimMazeGenerator implements IMazeGenerator {
 
     private static class Wall {
-        Position cell;
-        Position neighbor;
+        Position from;
+        Position to;
+        Position between;
 
-        Wall(Position cell, Position neighbor) {
-            this.cell = cell;
-            this.neighbor = neighbor;
+        Wall(Position from, Position to, Position between) {
+            this.from = from;
+            this.to = to;
+            this.between = between;
         }
     }
 
     @Override
     public Maze generate(int rows, int cols) {
+
+        // Enforce odd dimensions
+        if (rows % 2 == 0) rows++;
+        if (cols % 2 == 0) cols++;
+
         Maze maze = new Maze(rows, cols);
         Random random = new Random();
 
-        // Tüm hücreleri duvar yap
         initializeWalls(maze);
 
-        // Rastgele başlangıç hücresi
-        int startRow = random.nextInt(rows);
-        int startCol = random.nextInt(cols);
+        // Start at odd cell
+        int startRow = randomOdd(rows, random);
+        int startCol = randomOdd(cols, random);
         Position start = new Position(startRow, startCol);
 
         maze.setCell(startRow, startCol, Cell.Type.PATH);
 
-        // Duvar listesi
         List<Wall> walls = new ArrayList<>();
         addWalls(maze, start, walls);
 
-        // Prim algoritması
         while (!walls.isEmpty()) {
-            // Rastgele bir duvar seç
-            int index = random.nextInt(walls.size());
-            Wall wall = walls.remove(index);
+            Wall wall = walls.remove(random.nextInt(walls.size()));
 
-            Position neighbor = wall.neighbor;
-            Cell neighborCell = maze.getCell(neighbor);
+            Cell target = maze.getCell(wall.to);
+            if (target.getType() == Cell.Type.WALL) {
 
-            // Eğer komşu hala duvar ise
-            if (neighborCell != null && neighborCell.getType() == Cell.Type.WALL) {
-                // Hücreyi PATH yap
-                maze.setCell(neighbor.getRow(), neighbor.getCol(), Cell.Type.PATH);
+                // Carve passage
+                maze.setCell(wall.between.getRow(), wall.between.getCol(), Cell.Type.PATH);
+                maze.setCell(wall.to.getRow(), wall.to.getCol(), Cell.Type.PATH);
 
-                // Yeni hücrenin duvarlarını ekle
-                addWalls(maze, neighbor, walls);
+                addWalls(maze, wall.to, walls);
             }
         }
 
-        // Start ve end pozisyonları
-        maze.setStartPosition(new Position(0, 0));
-        maze.setEndPosition(new Position(rows - 1, cols - 1));
-        maze.setCell(0, 0, Cell.Type.START);
-        maze.setCell(rows - 1, cols - 1, Cell.Type.END);
+        maze.setStartPosition(start);
+        maze.setEndPosition(new Position(rows - 2, cols - 2));
+        maze.setCell(start.getRow(), start.getCol(), Cell.Type.START);
+        maze.setCell(rows - 2, cols - 2, Cell.Type.END);
 
         return maze;
     }
 
     @Override
     public List<AlgorithmStep> generateWithSteps(int rows, int cols) {
+
         List<AlgorithmStep> steps = new ArrayList<>();
+
+        if (rows % 2 == 0) rows++;
+        if (cols % 2 == 0) cols++;
+
         Maze maze = new Maze(rows, cols);
         Random random = new Random();
 
         initializeWalls(maze);
 
-        int startRow = random.nextInt(rows);
-        int startCol = random.nextInt(cols);
+        int startRow = randomOdd(rows, random);
+        int startCol = randomOdd(cols, random);
         Position start = new Position(startRow, startCol);
 
         maze.setCell(startRow, startCol, Cell.Type.PATH);
+
         steps.add(new AlgorithmStep(
                 AlgorithmStep.StepType.VISIT,
                 start,
-                Arrays.asList(start),
-                "Starting at " + start
+                List.of(start),
+                "Start cell selected"
         ));
 
         List<Wall> walls = new ArrayList<>();
         addWalls(maze, start, walls);
 
         int stepCount = 0;
-        while (!walls.isEmpty()) {
-            int index = random.nextInt(walls.size());
-            Wall wall = walls.remove(index);
-            Position neighbor = wall.neighbor;
-            Cell neighborCell = maze.getCell(neighbor);
 
-            if (neighborCell != null && neighborCell.getType() == Cell.Type.WALL) {
-                maze.setCell(neighbor.getRow(), neighbor.getCol(), Cell.Type.PATH);
+        while (!walls.isEmpty()) {
+            Wall wall = walls.remove(random.nextInt(walls.size()));
+
+            if (maze.getCell(wall.to).getType() == Cell.Type.WALL) {
+
+                maze.setCell(wall.between.getRow(), wall.between.getCol(), Cell.Type.PATH);
+                maze.setCell(wall.to.getRow(), wall.to.getCol(), Cell.Type.PATH);
 
                 steps.add(new AlgorithmStep(
                         AlgorithmStep.StepType.VISIT,
-                        neighbor,
-                        Arrays.asList(wall.cell, neighbor),
-                        "Step " + (++stepCount) + ": Added " + neighbor
+                        wall.to,
+                        Arrays.asList(wall.between, wall.to),
+                        "Step " + (++stepCount) + ": Carved passage"
                 ));
 
-                addWalls(maze, neighbor, walls);
+                addWalls(maze, wall.to, walls);
             }
         }
 
+        Position end = new Position(rows - 2, cols - 2);
+        maze.setStartPosition(start);
+        maze.setEndPosition(end);
+
+        maze.setCell(start.getRow(), start.getCol(), Cell.Type.START);
+        maze.setCell(end.getRow(), end.getCol(), Cell.Type.END);
+
         steps.add(new AlgorithmStep(
                 AlgorithmStep.StepType.COMPLETE,
-                new Position(rows - 1, cols - 1),
+                end,
                 new ArrayList<>(),
-                "Maze generation completed!"
+                "Maze generation completed"
         ));
 
         return steps;
@@ -142,21 +160,32 @@ public class PrimMazeGenerator implements IMazeGenerator {
     }
 
     private void addWalls(Maze maze, Position cell, List<Wall> walls) {
-        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+        int[][] dirs = {{-2,0},{2,0},{0,-2},{0,2}};
 
-        for (int[] dir : directions) {
-            int newRow = cell.getRow() + dir[0];
-            int newCol = cell.getCol() + dir[1];
+        for (int[] d : dirs) {
+            int nr = cell.getRow() + d[0];
+            int nc = cell.getCol() + d[1];
 
-            if (maze.isValid(newRow, newCol)) {
-                Position neighbor = new Position(newRow, newCol);
-                Cell neighborCell = maze.getCell(neighbor);
+            if (maze.isValid(nr, nc)) {
+                Position to = new Position(nr, nc);
+                Position between = new Position(
+                        cell.getRow() + d[0] / 2,
+                        cell.getCol() + d[1] / 2
+                );
 
-                if (neighborCell.getType() == Cell.Type.WALL) {
-                    walls.add(new Wall(cell, neighbor));
+                if (maze.getCell(to).getType() == Cell.Type.WALL) {
+                    walls.add(new Wall(cell, to, between));
                 }
             }
         }
+    }
+
+    private int randomOdd(int limit, Random rnd) {
+        int r;
+        do {
+            r = rnd.nextInt(limit);
+        } while (r % 2 == 0);
+        return r;
     }
 
     @Override
@@ -166,7 +195,7 @@ public class PrimMazeGenerator implements IMazeGenerator {
 
     @Override
     public String getTimeComplexity() {
-        return "O(V^2)";
+        return "O(V)";
     }
 
     @Override

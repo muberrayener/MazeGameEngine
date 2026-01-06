@@ -73,7 +73,7 @@ public class MazeValidator {
         }
 
         // Start ve end arasında path var mı kontrol et
-        return GraphUtils.isConnected(maze, start);
+        return PathUtils.isConnected(maze, start);
     }
 
     /**
@@ -116,7 +116,7 @@ public class MazeValidator {
         }
 
         // En az 2 walkable hücre olmalı
-        int walkableCount = GraphUtils.countWalkableCells(maze);
+        int walkableCount = PathUtils.countWalkableCells(maze);
         if (walkableCount < 2) {
             return false;
         }
@@ -128,7 +128,7 @@ public class MazeValidator {
         }
 
         // Tüm walkable hücreler erişilebilir mi?
-        return GraphUtils.isConnected(maze, start);
+        return PathUtils.isConnected(maze, start);
     }
 
     /**
@@ -159,7 +159,7 @@ public class MazeValidator {
         }
 
         int totalCells = maze.getRows() * maze.getCols();
-        int walkableCells = GraphUtils.countWalkableCells(maze);
+        int walkableCells = PathUtils.countWalkableCells(maze);
         int wallCells = totalCells - walkableCells;
         double walkableRatio = (double) walkableCells / totalCells * 100;
 

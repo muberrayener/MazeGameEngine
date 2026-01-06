@@ -12,8 +12,7 @@ public class Main {
 
     public static void main(String[] args) {
         System.out.println("╔═══════════════════════════════════════╗");
-        System.out.println("║   🎮 MAZE GAME ENGINE v1.0           ║");
-        System.out.println("║   Clean Architecture + DI Pattern    ║");
+        System.out.println("║   🎮 MAZE GAME ENGINE v1.0            ║");
         System.out.println("╚═══════════════════════════════════════╝");
         System.out.println();
 
@@ -120,13 +119,13 @@ public class Main {
                 var pos = cell.getPosition();
 
                 if (cell.getType() == com.maze.model.Cell.Type.START) {
-                    System.out.print("S");
+                    System.out.print("S ");
                 } else if (cell.getType() == com.maze.model.Cell.Type.END) {
-                    System.out.print("E");
+                    System.out.print("E ");
                 } else if (pathPositions.contains(pos)) {
-                    System.out.print("·");
+                    System.out.print("··");
                 } else if (cell.getType() == com.maze.model.Cell.Type.WALL) {
-                    System.out.print("█");
+                    System.out.print("██");
                 } else {
                     System.out.print(" ");
                 }

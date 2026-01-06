@@ -2,7 +2,7 @@ package com.maze.pathfinder;
 
 import com.maze.core.IPathFinder;
 import com.maze.model.*;
-import com.maze.util.GraphUtils;
+import com.maze.util.PathUtils;
 import java.util.*;
 
 /**
@@ -72,7 +72,7 @@ public class DFSPathFinder implements IPathFinder {
             return new Path(new ArrayList<>(), 0, endTime - startTime);
         }
 
-        return GraphUtils.reconstructPath(endCell);
+        return PathUtils.reconstructPath(endCell);
     }
 
     @Override
@@ -139,7 +139,7 @@ public class DFSPathFinder implements IPathFinder {
         }
 
         if (endCell != null) {
-            Path path = GraphUtils.reconstructPath(endCell);
+            Path path = PathUtils.reconstructPath(endCell);
             steps.add(new AlgorithmStep(
                     AlgorithmStep.StepType.COMPLETE,
                     end,

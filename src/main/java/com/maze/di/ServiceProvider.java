@@ -26,7 +26,7 @@ public class ServiceProvider {
         container.bind(IMazeGenerator.class, KruskalMazeGenerator.class);
 
         // PathFinder bindings (Strategy Pattern)
-        container.bind(IPathFinder.class, BFSPathFinder.class);
+        container.bind(IPathFinder.class, AStarPathFinder.class);
 
         // ObstacleManager binding
         container.bind(IObstacleManager.class, ObstacleManager.class);

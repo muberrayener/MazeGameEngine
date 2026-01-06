@@ -75,7 +75,7 @@ public class ObstacleManager implements IObstacleManager {
         int maxAttempts = count * 10;
 
         while (addedObstacles.size() < count && attempts < maxAttempts) {
-            Position pos = GraphUtils.getRandomWalkablePosition(maze);
+            Position pos = PathUtils.getRandomWalkablePosition(maze);
 
             if (pos != null && addObstacle(maze, pos)) {
                 addedObstacles.add(pos);
@@ -119,7 +119,7 @@ public class ObstacleManager implements IObstacleManager {
      * Engellerin path'i bloke edip etmediğini kontrol eder
      */
     public boolean isPathBlocked(Maze maze, Position start, Position end) {
-        return !GraphUtils.isConnected(maze, start);
+        return !PathUtils.isConnected(maze, start);
     }
 
     /**

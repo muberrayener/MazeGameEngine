@@ -47,13 +47,13 @@ public class MazeService {
         }
 
         int totalCells = maze.getRows() * maze.getCols();
-        int walkableCells = GraphUtils.countWalkableCells(maze);
+        int walkableCells = PathUtils.countWalkableCells(maze);
         int wallCells = totalCells - walkableCells;
         int obstacleCount = maze.getObstacles().size();
 
         double walkableRatio = (double) walkableCells / totalCells;
         boolean isConnected = walkableCells > 0 &&
-                GraphUtils.isConnected(maze, findFirstWalkable(maze));
+                PathUtils.isConnected(maze, findFirstWalkable(maze));
 
         return new MazeStatistics(
                 maze.getRows(),
