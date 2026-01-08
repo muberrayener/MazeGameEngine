@@ -29,14 +29,13 @@ public class MainController implements IVisualizationListener {
     private Maze currentMaze;
     private Path currentPath;
 
+
     public MainController(GameEngine engine, ServiceProvider provider) {
-        this.engine = engine;
+        this.engine = engine; // single instance
         this.provider = provider;
 
-        // Listener ekle
-        engine.addListener(this);
-
         initializeUI();
+        engine.addListener(this); // only once
     }
 
     private void initializeUI() {
@@ -211,29 +210,15 @@ public class MainController implements IVisualizationListener {
     }
 
     private void changeGenerator(ServiceProvider.GeneratorType type) {
-        // Engine'i yeni generator ile yeniden oluştur
-        GameEngine newEngine = provider.getGameEngine(
-                type,
-                ServiceProvider.PathFinderType.ASTAR
-        );
-
-        // Listener'ı aktar
-        newEngine.addListener(this);
-
+        //engine.setGeneratorType(type); // <-- implement this in GameEngine
         statusBar.setStatus("Generator changed to: " + type);
     }
 
     private void changePathFinder(ServiceProvider.PathFinderType type) {
-        // Engine'i yeni pathfinder ile yeniden oluştur
-        GameEngine newEngine = provider.getGameEngine(
-                ServiceProvider.GeneratorType.KRUSKAL,
-                type
-        );
-
-        newEngine.addListener(this);
-
+        //engine.setPathFinderType(type); // <-- implement this in GameEngine
         statusBar.setStatus("PathFinder changed to: " + type);
     }
+
 
     private void updateStatistics() {
         if (currentMaze == null) {
@@ -321,7 +306,11 @@ public class MainController implements IVisualizationListener {
     @Override
     public void onAlgorithmStarted(String algorithmName) {
         Platform.runLater(() -> {
-            statusBar.setStatus("Running: " + algorithmName);
+            try {
+                statusBar.setStatus("Path found! Length: ");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
     }
 

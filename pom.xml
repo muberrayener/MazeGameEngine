@@ -17,23 +17,14 @@
         <javafx.version>23.0.1</javafx.version>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>${javafx.version}</version>
-        </dependency>
-    </dependencies>
-
     <build>
         <plugins>
-            <!-- JavaFX Run Plugin -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.maze.gui.MazeApp</mainClass>
+                    <mainClass>com.maze.gui.MazeApplication</mainClass>
                 </configuration>
             </plugin>
         </plugins>

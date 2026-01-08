@@ -7,51 +7,37 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-/**
- * JavaFX GUI uygulaması.
- * Ana entry point.
- */
 public class MazeApplication extends Application {
 
-    private ServiceProvider serviceProvider;
-    private GameEngine gameEngine;
-
-    @Override
-    public void init() throws Exception {
-        // DI Container'ı başlat
-        serviceProvider = new ServiceProvider();
-        gameEngine = serviceProvider.getGameEngine();
-
-        System.out.println("✓ JavaFX Application initialized");
-    }
+    private ServiceProvider provider;
+    private GameEngine engine;
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("🎮 Maze Game Engine");
+        // Initialize DI container
+        provider = new ServiceProvider();
 
-        // MainController oluştur
-        MainController controller = new MainController(gameEngine, serviceProvider);
-
-        // Scene oluştur
-        Scene scene = new Scene(controller.getRoot(), 1200, 800);
-
-        // CSS ekle (opsiyonel)
-        scene.getStylesheets().add(
-                getClass().getResource("/styles/dark-theme.css").toExternalForm()
+        // Get engine from DI container
+        engine = provider.getGameEngine(
+                ServiceProvider.GeneratorType.KRUSKAL,
+                ServiceProvider.PathFinderType.ASTAR
         );
 
+        // Create main controller with engine + DI
+        MainController controller = new MainController(engine, provider);
+
+        // Build Scene from controller's root
+        Scene scene = new Scene(controller.getRoot());
+
+        // Setup Stage
+        primaryStage.setTitle("Maze Game Engine");
         primaryStage.setScene(scene);
+        primaryStage.setResizable(false);
         primaryStage.show();
-
-        System.out.println("✓ GUI started successfully");
-    }
-
-    @Override
-    public void stop() {
-        System.out.println("👋 Application closing...");
     }
 
     public static void main(String[] args) {
+        // Launch JavaFX Application thread
         launch(args);
     }
 }
