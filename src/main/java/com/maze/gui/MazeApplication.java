@@ -19,7 +19,7 @@ public class MazeApplication extends Application {
 
         // Get engine from DI container
         engine = provider.getGameEngine(
-                ServiceProvider.GeneratorType.KRUSKAL,
+                ServiceProvider.GeneratorType.PRIM,
                 ServiceProvider.PathFinderType.ASTAR
         );
 

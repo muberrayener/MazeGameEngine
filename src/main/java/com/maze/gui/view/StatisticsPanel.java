@@ -6,6 +6,8 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
+import java.security.PrivateKey;
+
 /**
  * İstatistik paneli - Sağ taraf.
  */
@@ -17,6 +19,8 @@ public class StatisticsPanel extends VBox {
     private Label obstaclesLabel;
     private Label pathLengthLabel;
     private Label pathTimeLabel;
+    private Label AlgorithmLabel;
+    private Label PathFinderLabel;
 
     public StatisticsPanel() {
         setPadding(new Insets(10));
@@ -63,6 +67,14 @@ public class StatisticsPanel extends VBox {
         obstaclesLabel = new Label("-");
         grid.add(obstaclesLabel, 1, 3);
 
+        grid.add(new Label("Generator:"), 0, 4);
+        AlgorithmLabel = new Label("-");
+        grid.add(AlgorithmLabel, 1, 4);
+
+        grid.add(new Label("Solver:"), 0, 5);
+        PathFinderLabel = new Label("-");
+        grid.add(PathFinderLabel, 1, 5);
+
         TitledPane pane = new TitledPane("Maze Info", grid);
         pane.setExpanded(true);
         return pane;
@@ -101,6 +113,14 @@ public class StatisticsPanel extends VBox {
 
     public void setObstacles(int count) {
         obstaclesLabel.setText(String.valueOf(count));
+    }
+
+    public void setAlgorithm(String name) {
+        AlgorithmLabel.setText(name);
+    }
+
+    public void setPathFinder(String name) {
+        PathFinderLabel.setText(name);
     }
 
     public void setPathLength(int length) {

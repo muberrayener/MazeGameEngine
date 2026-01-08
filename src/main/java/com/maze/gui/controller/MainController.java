@@ -244,6 +244,8 @@ public class MainController implements IVisualizationListener {
         statsPanel.setWalkable(walkable);
         statsPanel.setWalls(walls);
         statsPanel.setObstacles(currentMaze.getObstacles().size());
+        statsPanel.setAlgorithm(engine.getMazeGenerator().getAlgorithmName());
+        statsPanel.setPathFinder(engine.getPathFinder().getAlgorithmName());
 
         if (currentPath != null && !currentPath.isEmpty()) {
             statsPanel.setPathLength(currentPath.getLength());
