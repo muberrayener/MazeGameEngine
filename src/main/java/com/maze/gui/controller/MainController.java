@@ -258,7 +258,6 @@ public class MainController implements IVisualizationListener {
         alert.setTitle("About");
         alert.setHeaderText("Maze Game Engine v1.0");
         alert.setContentText(
-                "Clean Architecture + Design Patterns\n\n" +
                         "Algorithms:\n" +
                         "• Generators: Kruskal, Prim, Recursive\n" +
                         "• PathFinders: BFS, DFS, A*\n\n" +

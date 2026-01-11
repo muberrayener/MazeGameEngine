@@ -19,8 +19,8 @@ public class MazeApplication extends Application {
 
         // Get engine from DI container
         engine = provider.getGameEngine(
-                ServiceProvider.GeneratorType.PRIM,
-                ServiceProvider.PathFinderType.ASTAR
+                ServiceProvider.GeneratorType.KRUSKAL,
+                ServiceProvider.PathFinderType.BFS
         );
 
         // Create main controller with engine + DI
